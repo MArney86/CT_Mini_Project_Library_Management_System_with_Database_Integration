@@ -1,0 +1,2 @@
+# CT_Mini_Project_Library_Management_System_with_Database_Integration
+Library Management System Mini Project for Coding Temple Software Engineering Course
