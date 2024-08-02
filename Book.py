@@ -1,17 +1,18 @@
-from book_utils import get_book_id_from_db
-import Genre
 from connect_mysql import connect_database
 from mysql.connector import Error
 
-class Book(Genre):
-    def __init__(self, name, descriptor, category, title, author, isbn, pubdate, status = True):
-        self._book_id = get_book_id_from_db(title, author, pubdate)
+class Book():
+    def __init__(self, title, genre_id, author, isbn, pubdate, status = True):
+        self._genre_id = genre_id
         self._title = title
         self._author_id = author
         self._isbn = isbn
         self._publication_date = pubdate
-        self._status = status
-        super().__init__(name, descriptor, category)
+        self._availability = status
+        self._book_id = self._get_book_id_from_db(title, author, isbn)
+
+    def get_book_id(self):
+        return self._book_id
     
     def get_title(self): #getter for __title
         return self._title #return value of __title
@@ -52,6 +53,37 @@ class Book(Genre):
                 if conn and conn.is_connected():
                     cursor.close()
                     conn.close()
+
+    def get_genre_id(self):
+        return self._genre_id
+
+    def get_genre(self):
+        #establish connection
+        conn = connect_database()
+
+        #ensure connection and update name in db
+        if conn is not None:
+            try:
+                #establish cursor
+                cursor = conn.cursor()
+
+                #SQL Query to update the author's name in the db
+                query = 'SELECT FROM genres name WHERE id = %s'
+
+                #Execute query
+                cursor.execute(query, (self._genre_id,))
+                return_value = cursor.fetchone()[0]
+
+            #exceptions
+            except Error as e:
+                print(f"Unable to get Genre name\nError: {e}") #general error
+
+            #close connections
+            finally:
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+                    return return_value
 
     def get_author(self): #getter for __author
         #establish connection
@@ -198,13 +230,10 @@ class Book(Genre):
                     cursor.close()
                     conn.close()
 
-    def get_status(self): #return value of __status as either 'Available' or 'Borrowed'
-        if self._status: #check if __status is True (available)
-            return "Available"  #return "Available"
-        else: #__status is False
-            return "Borrowed" #return "Borrowed"
-    
-    def set_status_borrowed(self): #setter for setting _status to borrowed
+    def get_availability(self): #return value of __status as either 'Available' or 'Borrowed'
+        return self._availability
+            
+    def set_borrowed(self): #setter for setting _status to borrowed
         #establish connection
         conn = connect_database()
 
@@ -225,7 +254,7 @@ class Book(Genre):
                 cursor.execute(query, (self._book_id,))
                 conn.commit()
                 self._status = False
-                print("Author name updated successfully")
+                print(f"{self._title} was set to borrowed")
 
             #exceptions
             except Error as e:
@@ -237,7 +266,7 @@ class Book(Genre):
                     cursor.close()
                     conn.close()
 
-    def set_status_available(self): #setter for setting __status to Available
+    def set_available(self): #setter for setting __status to Available
         #establish connection
         conn = connect_database()
 
@@ -258,7 +287,7 @@ class Book(Genre):
                 cursor.execute(query, (self._book_id,))
                 conn.commit()
                 self._status = True
-                print("Author name updated successfully")
+                print(f"{self._title} was set to Available")
 
             #exceptions
             except Error as e:            
@@ -269,3 +298,44 @@ class Book(Genre):
                 if conn and conn.is_connected():
                     cursor.close()
                     conn.close()
+
+    def _get_book_id_from_db(self):
+        #establish connection
+        conn = connect_database()
+
+        #ensure connection
+        if conn is not None:
+            try:
+                #establish cursor
+                cursor = conn.cursor()
+
+                #SQL Query
+                query = "SELECT FROM Books id WHERE title = %s AND publication_date = %s AND isbn = %s" #inserts new member in the Members table using the information passed to the function
+
+                #Execute query
+                cursor.execute(query, (self._title, self._publication_date, self._isbn))
+            
+                #store result for manipulation
+                result = cursor.fetchone()
+
+                #check that results come back and how many results come back
+                if result:
+                    result = result[0]
+                else:
+                    result = None
+
+            #exceptions
+            except Error as e:
+            
+                if e.errno == 1406:
+                    print("Error: Value for name is too long.")
+            
+                else:
+                    print(f"Error: {e}") #general error
+
+            #close connections
+            finally:
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+                return result

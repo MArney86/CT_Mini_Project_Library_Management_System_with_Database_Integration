@@ -1,10 +1,9 @@
 from connect_mysql import connect_database
 from mysql.connector import Error
-from author_utils import get_author_id_from_db
 
 class Author:
     def __init__(self, name, bio):
-        self._author_id = get_author_id_from_db(name, bio)
+        self._author_id = self._get_author_id_from_db()
         self._name = name
         self._biography = bio
 
@@ -90,3 +89,44 @@ class Author:
 
     def get_author_id(self):
         return self._author_id
+    
+    def _get_author_id_from_db(self):
+        #establish connection
+        conn = connect_database()
+
+        #ensure connection
+        if conn is not None:
+            try:
+            #establish cursor
+                cursor = conn.cursor()
+
+                #SQL Query
+                query = "SELECT FROM Authors id WHERE name = %s AND bio = %s" #inserts new member in the Members table using the information passed to the function
+
+                #Execute query
+                cursor.execute(query, (self._name, self._biography))
+            
+                #store result for manipulation
+                result = cursor.fetchone()
+
+                #check that results come back and how many results come back
+                if result:
+                    result = result[0]
+                else:
+                    result = None
+
+            #exceptions
+            except Error as e:
+                
+                if e.errno == 1406:
+                    print("Error: Value for name is too long.")
+            
+                else:
+                    print(f"Error: {e}") #general error
+
+            #close connections
+            finally:
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+            return result

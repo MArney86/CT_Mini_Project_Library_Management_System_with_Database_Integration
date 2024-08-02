@@ -1,12 +1,15 @@
 from connect_mysql import connect_database
 from mysql.connector import Error
-from genre_utils import get_genre_id_from_db
+
 class Genre:
     def __init__(self, name, description, category):
-        self._genre_id = get_genre_id_from_db(name, category)
+        self._genre_id = self._get_genre_id_from_db()
         self._name = name
         self._description = description
         self._category = category
+
+    def get_genre_id(self):
+        return self._genre_id
 
     def get_name(self):
         return self._name
@@ -128,3 +131,44 @@ class Genre:
                 if conn and conn.is_connected():
                     cursor.close()
                     conn.close()
+
+    def _get_genre_id_from_db(self):
+        #establish connection
+        conn = connect_database()
+
+        #ensure connection
+        if conn is not None:
+            try:
+                #establish cursor
+                cursor = conn.cursor()
+
+                #SQL Query
+                query = "SELECT FROM genres id WHERE name = %s AND description = %s" #inserts new member in the Members table using the information passed to the function
+
+                #Execute query
+                cursor.execute(query, (self._name,self._description))
+            
+                #store result for manipulation
+                result = cursor.fetchone()
+
+                #check that results come back and how many results come back
+                if result:
+                    result = result[0]
+                else:
+                    result = None
+
+            #exceptions
+            except Error as e:
+            
+                if e.errno == 1406:
+                    print("Error: Value for name is too long.")
+            
+                else:
+                    print(f"Error: {e}") #general error
+
+            #close connections
+            finally:
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
+                return result

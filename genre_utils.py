@@ -1,4 +1,4 @@
-import Genre
+from genre import Genre
 from connect_mysql import connect_database
 from mysql.connector import Error
 
@@ -79,7 +79,7 @@ def get_genre_id(name):
                 conn.close()
             return result
 
-def get_genre_id_from_db(name, category):
+def get_books_from_genre(name):
     #establish connection
     conn = connect_database()
 
@@ -90,19 +90,24 @@ def get_genre_id_from_db(name, category):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Books id WHERE name = %s AND library_id = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT FROM Books id WHERE genre_id = %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
-            cursor.execute(query, (name,category))
+            cursor.execute(query, (get_genre_id(name),))
             
             #store result for manipulation
-            result = cursor.fetchone()
+            results = cursor.fetchall()
+            return_value = []
 
             #check that results come back and how many results come back
-            if result:
-                result = result[0]
-            else:
-                result = None
+            if results:
+                #one result
+                if len(results) == 1:
+                    return_value.append(results[0][0])
+                #multiple results
+                else:
+                    for result in results:
+                        return_value.append(result[0])
 
         #exceptions
         except Error as e:
@@ -118,4 +123,45 @@ def get_genre_id_from_db(name, category):
             if conn and conn.is_connected():
                 cursor.close()
                 conn.close()
-            return result
+            return return_value
+        
+def load_genres_from_db(genre_dict):
+    #establish connection
+    conn = connect_database()
+
+    #ensure connection
+    if conn is not None:
+        try:
+            #establish cursor
+            cursor = conn.cursor()
+
+            #SQL Query
+            query = "SELECT * FROM genres" #inserts new member in the Members table using the information passed to the function
+
+            #Execute query
+            cursor.execute(query)
+
+            #store result for manipulation
+            results = cursor.fetchall()
+            print(results)
+
+            #check that results come back and how many results come back
+            if results:
+                for result in results:
+                    id, name, description = result
+                    genre_dict[id] = Genre(name, description)
+            else:
+                raise Error("There are currently no Genres in the database")
+
+        #exceptions
+        except Error as e:
+            if e.errno == 1406:
+                print("Error: Value for name is too long.")
+            else:
+                print(f"Error: {e}")
+
+        #close connections
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
