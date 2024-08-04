@@ -1,37 +1,38 @@
 # CT_Mini_Project_Library_Management_System
 Library Management System Mini Project for Coding Temple Software Engineering Course
+====================================================================================
 
 Table of Contents:
-	1. Installing and Running the Application
-	2. How to use the Library Management System
+------------------
+	###1. Installing and Running the Application
+	###2. How to use the Library Management System
 		a. Book Operations
     		b. User Operations
    		c. Author Operations
     		d. Genre Operations
     		e. Quit
-	3. Book Operations
+	###3. Book Operations
 		a. Add a new book
         	b. Borrow a book
         	c. Return a book
         	d. Search for a book
         	e. Display all books
 		f. Return to previous menu
-	4. User Operations
+	###4. User Operations
 		a. Add a new user
         	b. View user details
         	c. Display all users
 		d. Return to previous menu
-	5. Author Operations
+	###5. Author Operations
 		a. Add a new author
         	b. View author details
         	c. Display all authors
 		d. Return to previous menu
-	6. Genre Operations
+	###6. Genre Operations
         	a. Add a new genre
         	b. View genre details
         	c. Display all genres
 		d. Return to previous menu
-	7. Notes about automated save/load system
 
 1. Installing and Running the Application:
 	Installation: Clone or download the repository to a directory.
