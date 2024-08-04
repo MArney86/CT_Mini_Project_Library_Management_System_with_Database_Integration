@@ -6,8 +6,9 @@ from mysql.connector import Error
 
 
 def generate_library_id():
-    id = ''.join(random.choices(string.digits, k=10))#generate randomized library id
-    return id #return new library id
+    #generate random library id and return it
+    id = ''.join(random.choices(string.digits, k=10))
+    return id
 
 def add_user(user_dict):
     #establish connection
@@ -19,8 +20,11 @@ def add_user(user_dict):
             cursor = conn.cursor()
             #get user details from operator
             name = input("Please enter the name of the user you'd like to add: ").strip()
-
-            id = generate_library_id() #generate new user's library id
+            
+            #generate new user's library id
+            id = generate_library_id()
+            
+            #check if generated id is already in use and regenerate if is
             library_id_set = set()
             for user_id in user_dict.keys():
                 library_id_set.add(user_dict[user_id].get_library_id())
@@ -33,18 +37,21 @@ def add_user(user_dict):
             #query to insert new user into users table
             query = '''INSERT INTO users (name, library_id)
             VALUES (%s, %s)'''
+
+            #execut query
             cursor.execute(query, (name, id))
             conn.commit()
 
+            #add user to dictionary
             temp_user = User(name, id)
             user_dict[get_user_id_from_library_id(id)] = temp_user
 
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
 
         #close connections
         finally:
@@ -53,47 +60,56 @@ def add_user(user_dict):
                 conn.close()
 
 def view_user_details(user_dict, book_dict):
-    if user_dict: #check that user dictionary isn't empty
-        while True: #loop in case of invalid input
-            query = input("Please input the name or Library ID of the user you'd like to view: ").strip() #ask the operator for user name or library id
-            if not query.isnumeric(): #check if input is not Library ID
-                query = get_user_id_from_name(user_dict, query) #set query to the id associated with the name
-                display_user(user_dict, book_dict, query) #print user details to operator
-                break #end loop
-            elif query.isnumeric(): #is library id
-                display_user(user_dict, book_dict, query)#print user information to operator
-                break #end loop
-            else: #input is neither letters or numbers
-                print("invalid input, please try again") #notify user of invalid input 
-
-def display_user(user_dict, book_dict, id): 
-    if id in user_dict.keys(): #check for user id in the user dictionary
-        print(f"\nName: {user_dict[id].get_name()}") #print user name
-        print(f"Library ID: {user_dict[id].get_library_id()}") #print user Library ID
-        print("Currently borrowed books:") #header for borrowed books
-        temp = user_dict[id].get_borrowed() #store the borrowed books list
-        if temp: #check that list is not empty
-            for book in temp: #iterate through the list
-                print(f'"{book_dict[book].get_title()}" by {book_dict[book].get_author()}') #print the title and author of the book iterated
-        else: #list is empty
-            print("This user currently does not have any books borrowed.") #print that there are no borrowed books currently
-        print("\n") #spacer for formatting
-    else: #user id is not in the user dictionary
-        print("The user id you provided is not in use by any users") #notify operator of lack of user with that id
-
-        
-def display_all_users(user_dict, book_dict):
+    #check for users in dictionary
     if user_dict:
-        for id, user in user_dict.items(): #iterate through users in the dictionary
-            print(f"\nName: {user_dict[id].get_name()}") #print user name
-            print(f"Library ID: {user_dict[id].get_library_id()}") #print user Library ID
-            print("Currently borrowed books:") #header for borrowed books
-            temp = user_dict[id].get_borrowed() #store the borrowed books list
-            if temp: #check that list is not empty
-                for book in temp: #iterate through the list
-                    print(f'"{book_dict[book].get_title()}" by {book_dict[book].get_author()}') #print the title and author of the book iterated
-            else: #list is empty
-                print("This user currently does not have any books borrowed.") #print that there are no borrowed books currently
+        while True:
+            #get info to search from
+            query = input("Please input the name or Library ID of the user you'd like to view: ").strip()
+            #check for name or id and print info of resulting user
+            if not query.isnumeric():
+                query = get_user_id_from_name(user_dict, query)
+                display_user(user_dict, book_dict, query)
+                break
+            elif query.isnumeric():
+                display_user(user_dict, book_dict, query)
+                break
+            else:
+                print("invalid input, please try again")
+    else:
+        print("There are currently no users registered at the library")
+
+def display_user(user_dict, book_dict, id):
+    #check that id is in dictionary
+    if id in user_dict.keys():
+        #print resulting information
+        print(f"\nName: {user_dict[id].get_name()}")
+        print(f"Library ID: {user_dict[id].get_library_id()}")
+        print("Currently borrowed books:") 
+        temp = user_dict[id].get_borrowed()
+        if temp:
+            for book in temp:
+                print(f'"{book_dict[book].get_title()}" by {book_dict[book].get_author()}')
+        else:
+            print("This user currently does not have any books borrowed.")
+        print("\n") 
+    #no users in dictionary
+    else:
+        print("The user id you provided is not in use by any users")
+
+def display_all_users(user_dict, book_dict):
+    #check that there are users in dictionary
+    if user_dict:
+        #iterate and display users' information
+        for id, user in user_dict.items():
+            print(f"\nName: {user_dict[id].get_name()}")
+            print(f"Library ID: {user_dict[id].get_library_id()}") 
+            print("Currently borrowed books:") 
+            temp = user_dict[id].get_borrowed()
+            if temp:
+                for book in temp:
+                    print(f'"{book_dict[book].get_title()}" by {book_dict[book].get_author()}')
+            else: 
+                print("This user currently does not have any books borrowed.")
     else:
         print("There are currently no users registered at the library")
 
@@ -107,49 +123,48 @@ def get_user_id_from_name(user_dict, name):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
-            query = "SELECT id FROM users WHERE name LIKE %s" #inserts new member in the Members table using the information passed to the function
+            #SQL Query to get ids from users with name that matches input
+            query = "SELECT id FROM users WHERE name LIKE %s"
 
-            #Execute query
+            #Execute query and store results
             cursor.execute(query, (name,))
-            print('execute')
-            #store result for manipulation
             results = cursor.fetchall()
-            print('fetchall')
-            #check that results come back and how many results come back and choose exact member
+
+            #check that results came back and how many results come back and choose exact member
             if results:
-                print('results')
                 #one result
-                if len(results) == 1: #check that we found users and that there is only 1
-                    return_value = results[0][0] #return value of __library_id from found user
-                    print('one')
+                if len(results) == 1:
+                    return_value = results[0][0]
                 
                 #multiple results and choosing specific user
                 elif len(results) > 1:
+                    #iterate through results and print for choosing
                     counter = 1
                     for user in results:
                         print(f"{counter}: Name: {user_dict[user[0]].get_name()}") #print user name
                         print(f"   Library ID: {user_dict[user[0]].get_library_id()}") #print the library id
                         counter += 1
+                    #choose distinct result to return
                     while True:
                         choice = input("Please input the number of the user you were looking for: ").strip()
                         if int(choice) > 0 and int(choice) <= len(results):
                             return_value = results[int(choice) - 1][0]
                         else:
                             print("Invalid choice. Please Try again")
-            #no resulsts
+            
+            #no resulsts return none
             else:
                 return_value = None
-                print("That name does not have a Library ID") #notify operator that user is not found
+                print("That name does not have a Library ID")
 
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
         except KeyError:
-            print("Invalid choice get_user_id_from_name. Please try again with only numbers")
+            print("\033[7mInvalid choice get_user_id_from_name. Please try again with only numbers\033[0m")
 
         #close connections
         finally:
@@ -168,16 +183,14 @@ def get_user_id_from_library_id(library_id):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
-            query = "SELECT id FROM users WHERE library_id = %s" #inserts new member in the Members table using the information passed to the function
+            #SQL Query to get the id from the user with the matching library id
+            query = "SELECT id FROM users WHERE library_id = %s"
 
-            #Execute query
+            #Execute query and store results
             cursor.execute(query, (library_id,))
-            
-            #store result for manipulation
             result = cursor.fetchone()
 
-            #check that results come back and how many results come back
+            #check that results come back and format for return
             if result:
                 result = result[0]
             else:
@@ -185,12 +198,10 @@ def get_user_id_from_library_id(library_id):
 
         #exceptions
         except Error as e:
-            
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
-            
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
 
         #close connections
         finally:
@@ -209,16 +220,14 @@ def load_users_from_db(user_dict):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
+            #SQL Query to get all from users
             query = "SELECT * FROM users"
 
-            #Execute query
+            #Execute query and store results
             cursor.execute(query)
-
-            #store result for manipulation
             results = cursor.fetchall()
 
-            #check that results came back and how many results came back
+            #check that results came back and load into dictionary
             if results:
                 for result in results:
                     id, name, library_id = result
@@ -229,9 +238,9 @@ def load_users_from_db(user_dict):
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
 
         #close connections
         finally:

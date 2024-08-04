@@ -162,7 +162,7 @@ def genre_menu():
             break
         #invalid input
         else: 
-            print("\033[7mInvalid choice. Please try again.033\[0m")
+            print("\033[7mInvalid choice. Please try again.\033[0m")
 
 if __name__ == "__main__":
     main()

@@ -30,16 +30,17 @@ class User:
                 #Execute query
                 cursor.execute(query, (name, self._user_id))
                 conn.commit()
+                
+                #update object
                 self._name = name
                 print("Genre name updated successfully")
 
             #exceptions
             except Error as e:
                 if e.errno == 1406:
-                    print("Unable to update genre name\nError: Value for name is too long.")
-            
+                    print("\033[7mUnable to update genre name\nError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Unable to update title\nError: {e}") #general error
+                    print(f"\033[7mUnable to update title\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -70,16 +71,17 @@ class User:
                 #Execute query
                 cursor.execute(query, (library_id, self._user_id))
                 conn.commit()
+
+                #update object
                 self._library_id = library_id
                 print("Genre name updated successfully")
 
             #exceptions
             except Error as e:
                 if e.errno == 1406:
-                    print("Unable to update genre name\nError: Value for name is too long.")
-            
+                    print("\033[7mUnable to update genre name\nError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Unable to update title\nError: {e}") #general error
+                    print(f"\033[7mUnable to update title\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -100,19 +102,22 @@ class User:
                 #SQL Query to update the author's name in the db
                 query = 'SELECT book_id FROM borrowed_books WHERE user_id = %s'
 
-                #Execute query then prepare it for returning
+                #Execute query then store results
                 cursor.execute(query, (self._user_id,))
                 borrowed = cursor.fetchall()
+
+                #check results and prepare for returning
                 if borrowed:
                     return_value = []
                     for book in borrowed:
                         return_value.append(book[0])
+                #no results
                 else:
                     return_value = None
 
             #exceptions
             except Error as e:
-                print(f"Unable to get borrowed books\nError: {e}") #general error
+                print(f"\033[7mUnable to get borrowed books\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -131,16 +136,14 @@ class User:
                 #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query
-                query = "SELECT id FROM Users WHERE name = %s AND library_id = %s" #inserts new member in the Members table using the information passed to the function
+                #SQL Query to get id of user that matches name and library_id
+                query = "SELECT id FROM Users WHERE name = %s AND library_id = %s"
 
-                #Execute query
+                #Execute query and store results
                 cursor.execute(query, (self._name, self._library_id))
-            
-                #store result for manipulation
                 result = cursor.fetchone()
 
-                #check that results come back and how many results come back
+                #check that results come back and format for return
                 if result:
                     result = result[0]
                 else:
@@ -148,12 +151,10 @@ class User:
 
             #exceptions
             except Error as e:
-            
                 if e.errno == 1406:
-                    print("Error: Value for name is too long.")
-            
+                    print("\033[7mError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Error: {e}") #general error
+                    print(f"\033[7mError: {e}\033[0m")
 
             #close connections
             finally:

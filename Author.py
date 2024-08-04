@@ -22,7 +22,7 @@ class Author:
 
                 #SQL Query to update the author's name in the db
                 query = '''
-                UPDATE Authors
+                UPDATE authors
                 SET name = %s
                 WHERE id = %s
                 '''
@@ -62,7 +62,7 @@ class Author:
 
                 #SQL Query to update the author's name in the db
                 query = '''
-                UPDATE Authors
+                UPDATE authors
                 SET biography = %s
                 WHERE id = %s
                 '''
@@ -100,8 +100,8 @@ class Author:
             #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query
-                query = "SELECT id FROM Authors WHERE name = %s AND biography = %s" #inserts new member in the Members table using the information passed to the function
+                #SQL Query to get author id where the name and biography match what's in the class
+                query = "SELECT id FROM authors WHERE name = %s AND biography = %s" #inserts new member in the Members table using the information passed to the function
 
                 #Execute query
                 cursor.execute(query, (self._name, self._biography))
@@ -109,24 +109,24 @@ class Author:
                 #store result for manipulation
                 result = cursor.fetchone()
 
-                #check that results come back and how many results come back
+                #check that results came back and get them ready to be returned
                 if result:
                     result = result[0]
+                #no results return none
                 else:
                     result = None
 
             #exceptions
             except Error as e:
-                
                 if e.errno == 1406:
-                    print("Error: Value for name is too long.")
+                    print("\033[7mError: Value for name is too long.\033[0m")
             
                 else:
-                    print(f"Error: {e}") #general error
+                    print(f"\033[7mError: {e}\033[0m") #general error
 
             #close connections
             finally:
                 if conn and conn.is_connected():
                     cursor.close()
                     conn.close()
-            return result
+                return result

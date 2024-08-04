@@ -24,7 +24,7 @@ class Genre:
                 #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query to update the author's name in the db
+                #SQL Query to update the genre's name in the db
                 query = '''
                 UPDATE Genres
                 SET name = %s
@@ -40,10 +40,9 @@ class Genre:
             #exceptions
             except Error as e:
                 if e.errno == 1406:
-                    print("Unable to update genre name\nError: Value for name is too long.")
-            
+                    print("\033[7mUnable to update genre name\nError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Unable to update title\nError: {e}") #general error
+                    print(f"\033[7mUnable to update title\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -65,14 +64,14 @@ class Genre:
                 #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query to update the author's name in the db
+                #SQL Query to update the genre's description in the db
                 query = '''
                 UPDATE Genres
                 SET name = %s
                 WHERE id = %s
                 '''
 
-                #Execute query
+                #Execute query and update object
                 cursor.execute(query, (description, self._genre_id))
                 conn.commit()
                 self._description = description
@@ -81,10 +80,9 @@ class Genre:
             #exceptions
             except Error as e:
                 if e.errno == 1406:
-                    print("Unable to update genre description\nError: Value for name is too long.")
-            
+                    print("\033[7mUnable to update genre description\nError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Unable to update description\nError: {e}") #general error
+                    print(f"\033[7mUnable to update description\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -105,14 +103,14 @@ class Genre:
                 #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query to update the author's name in the db
+                #SQL Query to update the genre's category in the db
                 query = '''
                 UPDATE Genres
                 SET category = %s
                 WHERE id = %s
                 '''
 
-                #Execute query
+                #Execute query and update object
                 cursor.execute(query, (category, self._genre_id))
                 conn.commit()
                 self._category = category
@@ -121,10 +119,9 @@ class Genre:
             #exceptions
             except Error as e:
                 if e.errno == 1406:
-                    print("Unable to update genre name\nError: Value for name is too long.")
-            
+                    print("\033[7mUnable to update genre name\nError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Unable to update title\nError: {e}") #general error
+                    print(f"\033[7mUnable to update title\nError: {e}\033[0m")
 
             #close connections
             finally:
@@ -142,16 +139,13 @@ class Genre:
                 #establish cursor
                 cursor = conn.cursor()
 
-                #SQL Query
-                query = "SELECT id FROM genres WHERE name = %s AND description = %s" #inserts new member in the Members table using the information passed to the function
-
-                #Execute query
+                #SQL Query to get genre id from the name and description
+                query = "SELECT id FROM genres WHERE name = %s AND description = %s"
+                #Execute query and store results
                 cursor.execute(query, (self._name,self._description))
-            
-                #store result for manipulation
                 result = cursor.fetchone()
 
-                #check that results come back and how many results come back
+                #check that results come back and format for return
                 if result:
                     result = result[0]
                 else:
@@ -159,12 +153,10 @@ class Genre:
 
             #exceptions
             except Error as e:
-            
                 if e.errno == 1406:
-                    print("Error: Value for name is too long.")
-            
+                    print("\033[7mError: Value for name is too long.\033[0m")
                 else:
-                    print(f"Error: {e}") #general error
+                    print(f"\033[7mError: {e}\033[0m")
 
             #close connections
             finally:

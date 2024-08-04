@@ -16,12 +16,13 @@ def add_author(author_dict):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
+            #SQL Query to insert new author
             query = "INSERT INTO authors (name, biography) VALUES (%s, %s)" #inserts new member in the Members table using the information passed to the function
 
             #Execute query and add author to author dictionary
             cursor.execute(query, (name, bio))
             conn.commit()
+
             #add author to author dictionary
             author_temp = Author(name, bio)
             author_dict[author_temp.get_author_id()] =  author_temp
@@ -30,33 +31,50 @@ def add_author(author_dict):
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
 
 def view_author_details(author_dict, book_dict):
-    while True:
-        name = input("Please enter that name of the author you'd like to view: ").strip() #get name of author from operator
-        author_id = get_author(author_dict, book_dict, name)
-        if author_id in author_dict.keys(): #check name is in keys of dictionary
-            display_author(author_dict, author_id) #display the author's information
-            break #end loop
-        else: #author doesn't exist in keys
-            print("That Author's name is not in the library's list of authors.") #notify user that author is not in library
-            choice = input("Would you like to add the Author? (yes/no): ").strip() #offer to add
-            if choice == 'yes': #operator chooses to add
-                add_author(author_dict) #add author
-            else:
+    #ensure there are authors to display
+    if author_dict:
+        while True:
+            #get info from operator
+            name = input("Please enter that name of the author you'd like to view: ").strip()
+        
+            #get the id of the searched for author 
+            author_id = get_author(author_dict, book_dict, name)
+
+            #check that author is in the list of authors and display
+            if author_id in author_dict.keys():
+                display_author(author_dict, author_id)
                 break
+            else: #author doesn't exist in keys or is not in db and notify
+                print("That Author's name is not in the library's list of authors.")
+
+                #ask user if they want to add author
+                choice = input("Would you like to add the Author? (yes/no): ").strip()
+                if choice == 'yes':
+                    add_author(author_dict)
+                else:
+                    break
+    #notify of lack of authors
+    else:
+        print("There are currently no authors in the library records")
+
 
 def display_author(author_dict, author_id):
-    print(f"\nName: {author_dict[author_id].get_name()}") #print author name to operator
-    print(f"Biography: {author_dict[author_id].get_biography()}") #print author's biography to operator
+    #display information about the author with the input id
+    print(f"\nName: {author_dict[author_id].get_name()}")
+    print(f"Biography: {author_dict[author_id].get_biography()}")
 
 def display_all_authors(author_dict):
-    if author_dict: #check that there are authors in the dictionary
-        for author_id in author_dict.keys(): #iterate through authors in dictionary
-            display_author(author_dict, author_id) #print details of author to user
+    #check that there are authors already
+    if author_dict:
+        #iterate through authors and display their info
+        for author_id in author_dict.keys():
+            display_author(author_dict, author_id)
+    #display to operator that there are no authors to display
     else:
         print("There are currently no authors in the library records")
 
@@ -70,50 +88,48 @@ def get_author(author_dict, book_dict, name):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
+            #SQL Query go retrieve the id of the author input
             query = "SELECT id FROM authors WHERE name LIKE %s" #inserts new member in the Members table using the information passed to the function
 
-            #Execute query
+            #Execute query and store results
             cursor.execute(query, (name,))
-            
-            #store result for manipulation
             results = cursor.fetchall()
 
-            #check that results come back and how many results come back
+            #check that results came back
             if results:
-                
-                #one result
+                #one result and setup for return
                 if len(results) == 1:
                     return_value = results[0][0]
                 
-                #multiple results
+                #multiple results and choose which one to return
                 else:
                     print("Authors with the name you chose:")
                     
+                    #display results with number to choose
                     counter = 1
                     for result in results:
                             print(f"{counter}. {author_dict[result[0]].get_name()}:  {author_dict[result[0]].get_biography()}")
                             counter += 1
-                    while True: #loop in case of invalid inputs
+                    #choose result to return
+                    while True:
                         choice = input('Please input the number of the specific Author you were looking for')
                         
                         #verify valid choice and set to return selected author
                         if int(choice) > 0 and int(choice) <= len(results):
                             return_value = results[int(choice) - 1][0]
-                        else: #invalid choice
+                        else:
                             print("That was not a valid choice. Please try again")
             else:
                 return_value = None
-                raise Error("The Author was not found")
 
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m")
         except ValueError:
-            print("That was not a valid choice. Please try again using only numbers")
+            print("\033[7mThat was not a valid choice. Please try again using only numbers\033[0m")
 
         #close connections
         finally:
@@ -132,29 +148,27 @@ def load_authors_from_db(author_dict):
             #establish cursor
             cursor = conn.cursor()
 
-            #SQL Query
-            query = "SELECT * FROM authors" #inserts new member in the Members table using the information passed to the function
+            #SQL Query to return all authors
+            query = "SELECT * FROM authors"
 
-            #Execute query
+            #Execute query and store results
             cursor.execute(query)
-
-            #store result for manipulation
             results = cursor.fetchall()
 
-            #check that results come back and how many results come back
+            #check that results come back and add them to the author's dictionary
             if results:
                 for result in results:
                     id, name, biography = result
                     author_dict[id] = Author(name, biography)
             else:
-                raise Error("There are currently no Authors in the database")
+                print("There are currently no Authors in the database")
 
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m") #general error
 
         #close connections
         finally:
