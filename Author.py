@@ -3,9 +3,9 @@ from mysql.connector import Error
 
 class Author:
     def __init__(self, name, bio):
-        self._author_id = self._get_author_id_from_db()
         self._name = name
         self._biography = bio
+        self._author_id = self._get_author_id_from_db()
 
     def get_name(self):
         return self._name
@@ -101,7 +101,7 @@ class Author:
                 cursor = conn.cursor()
 
                 #SQL Query
-                query = "SELECT FROM Authors id WHERE name = %s AND bio = %s" #inserts new member in the Members table using the information passed to the function
+                query = "SELECT id FROM Authors WHERE name = %s AND biography = %s" #inserts new member in the Members table using the information passed to the function
 
                 #Execute query
                 cursor.execute(query, (self._name, self._biography))

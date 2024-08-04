@@ -3,9 +3,9 @@ from mysql.connector import Error
 
 class User:
     def __init__(self, name, id):
-        self._user_id = self._get_user_id_from_db(name, id)
         self._name = name
         self._library_id = id
+        self._user_id = self._get_user_id_from_db()
 
     def get_name(self):
         return self._name
@@ -98,7 +98,7 @@ class User:
                 cursor = conn.cursor()
 
                 #SQL Query to update the author's name in the db
-                query = 'SELECT FROM borrowed_books book_id WHERE user_id = %s'
+                query = 'SELECT book_id FROM borrowed_books WHERE user_id = %s'
 
                 #Execute query then prepare it for returning
                 cursor.execute(query, (self._user_id,))
@@ -107,6 +107,8 @@ class User:
                     return_value = []
                     for book in borrowed:
                         return_value.append(book[0])
+                else:
+                    return_value = None
 
             #exceptions
             except Error as e:
@@ -130,7 +132,7 @@ class User:
                 cursor = conn.cursor()
 
                 #SQL Query
-                query = "SELECT FROM Users id WHERE name = %s AND library_id = %s" #inserts new member in the Members table using the information passed to the function
+                query = "SELECT id FROM Users WHERE name = %s AND library_id = %s" #inserts new member in the Members table using the information passed to the function
 
                 #Execute query
                 cursor.execute(query, (self._name, self._library_id))

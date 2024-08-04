@@ -2,14 +2,14 @@ from connect_mysql import connect_database
 from mysql.connector import Error
 
 class Book():
-    def __init__(self, title, genre_id, author, isbn, pubdate, status = True):
+    def __init__(self, title, genre_id, author, isbn, pubdate, availability = True):
         self._genre_id = genre_id
         self._title = title
         self._author_id = author
         self._isbn = isbn
         self._publication_date = pubdate
-        self._availability = status
-        self._book_id = self._get_book_id_from_db(title, author, isbn)
+        self._availability = availability
+        self._book_id = self._get_book_id_from_db()
 
     def get_book_id(self):
         return self._book_id
@@ -68,7 +68,7 @@ class Book():
                 cursor = conn.cursor()
 
                 #SQL Query to update the author's name in the db
-                query = 'SELECT FROM genres name WHERE id = %s'
+                query = 'SELECT name FROM genres WHERE id = %s'
 
                 #Execute query
                 cursor.execute(query, (self._genre_id,))
@@ -94,13 +94,17 @@ class Book():
             try:
                 #establish cursor
                 cursor = conn.cursor()
-
+                
                 #SQL Query to update the author's name in the db
-                query = 'SELECT FROM Authors name WHERE id = %s'
+                query = 'SELECT author_id FROM books WHERE id = %s'
 
                 #Execute query
-                cursor.execute(query, (self._author_id,))
-                return_value = cursor.fetchone()[0]
+                cursor.execute(query, (self._book_id,))
+                temp = cursor.fetchone()
+                if temp:            
+                    return_value = temp[0]
+                else:
+                    return_value = None
 
             #exceptions
             except Error as e:
@@ -231,7 +235,10 @@ class Book():
                     conn.close()
 
     def get_availability(self): #return value of __status as either 'Available' or 'Borrowed'
-        return self._availability
+        if self._availability:
+            return "Available"
+        else:
+            return "Borrowed"
             
     def set_borrowed(self): #setter for setting _status to borrowed
         #establish connection
@@ -253,7 +260,7 @@ class Book():
                 #Execute query
                 cursor.execute(query, (self._book_id,))
                 conn.commit()
-                self._status = False
+                self._availability = False
                 print(f"{self._title} was set to borrowed")
 
             #exceptions
@@ -278,15 +285,15 @@ class Book():
 
                 #SQL Query to update the author's name in the db
                 query = '''
-                UPDATE Books
-                SET availablity = 1
+                UPDATE books
+                SET availability = 1
                 WHERE id = %s
                 '''
 
                 #Execute query
                 cursor.execute(query, (self._book_id,))
                 conn.commit()
-                self._status = True
+                self._availability = True
                 print(f"{self._title} was set to Available")
 
             #exceptions
@@ -310,10 +317,10 @@ class Book():
                 cursor = conn.cursor()
 
                 #SQL Query
-                query = "SELECT FROM Books id WHERE title = %s AND publication_date = %s AND isbn = %s" #inserts new member in the Members table using the information passed to the function
+                query = "SELECT id FROM Books WHERE isbn = %s" #inserts new member in the Members table using the information passed to the function
 
                 #Execute query
-                cursor.execute(query, (self._title, self._publication_date, self._isbn))
+                cursor.execute(query, (self._isbn,))
             
                 #store result for manipulation
                 result = cursor.fetchone()

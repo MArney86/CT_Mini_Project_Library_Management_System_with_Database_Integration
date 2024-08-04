@@ -8,7 +8,7 @@ from mysql.connector import Error
 
 
 
-def book_id_from_title(book_dict, author_dict, title): #function to return the isbn of a book by its title
+def book_id_from_title(book_dict, author_dict, title,): #function to return the isbn of a book by its title
     #establish connection
     conn = connect_database()
 
@@ -19,7 +19,7 @@ def book_id_from_title(book_dict, author_dict, title): #function to return the i
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Books id WHERE name = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM books WHERE title = %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (title,))
@@ -48,10 +48,11 @@ def book_id_from_title(book_dict, author_dict, title): #function to return the i
                         
                         #verify valid choice and set to return selected author
                         if int(choice) > 0 and int(choice) <= len(results):
-                            return_value = result[choice - 1][0]
+                            return_value = results[choice - 1][0]
                         else:
                             print("That was not a valid choice. Please try again")
             else:
+                return_value = None
                 raise Error("That title was not found")
         except Error as e:
             
@@ -82,7 +83,7 @@ def is_valid_date(user_date): #function to validate date inputs
 
     return result #no errors, return true value
 
-def add_book(book_dict, genre_dict):
+def add_book(book_dict, genre_dict, author_dict):
     #establish connection
     conn = connect_database()
 
@@ -93,11 +94,11 @@ def add_book(book_dict, genre_dict):
             cursor = conn.cursor()
 
             #SQL Query to add the book to the Books table
-            query = "INSERT INTO Books (title, genre, author, isbn, publication_date) VALUES (%s, %s, %s, %s, %s)"
+            query = "INSERT INTO Books (title, genre_id, author_id, isbn, publication_date) VALUES (%s, %s, %s, %s, %s)"
 
             
             title = input("Please enter the title of the book you'd like to add: ").strip() #get title from operator
-            author = get_author(input("Please enter the Author of the book you'd like to add: ")).strip() #get author from operator
+            author = get_author(author_dict, book_dict, input("Please enter the Author of the book you'd like to add: ").strip()) #get author from operator
             isbn = input("Please enter the ISBN for the book you'd like to add: ").strip() #get isbn from operator
 
             while True: #loop incase of invalid inputs
@@ -116,7 +117,7 @@ def add_book(book_dict, genre_dict):
                     genre_choice = input("Please input the genre of the book you're adding to the library: ").strip() #get chosen genre from operator
                     found = False
                     for stored_genre in genre_dict.values():
-                        if genre_choice == stored_genre.getname(): #check that the user input is in genre dictionary
+                        if genre_choice == stored_genre.get_name(): #check that the user input is in genre dictionary
                             genre_choice = gu.get_genre_id(genre_choice)
                             found = True
                             break
@@ -149,7 +150,7 @@ def add_book(book_dict, genre_dict):
                 cursor.close()
                 conn.close()
 
-def borrow_book(user_dict, book_dict):
+def borrow_book(user_dict, book_dict, author_dict):
     #establish connection
     conn = connect_database()
 
@@ -165,26 +166,21 @@ def borrow_book(user_dict, book_dict):
             while True:
                 try:
                     #get necessary information from operator
-                    user = input("Please enter the Name or Library ID of the user checking out the book: ")
-                    book = input("Please enter the title of the book you'd like to borrow: ")
+                    user = uu.get_user_id_from_name(user_dict, input("Please enter the Name of the user checking out the book: ").strip())
+                    book = input("Please enter the title of the book you'd like to borrow: ").strip()
+                    
                     today = dt.date.today()
                     return_delta = dt.timedelta(days=14)
                     borrow_date = today.strftime("%Y-%m-%d")
                     return_date = (today + return_delta).strftime("%Y-%m-%d") 
 
-                    #ensure all inputs are converted to ids for db handling
-                    if not user.isnumeric(): #check if input is not the Library ID
-                        user = uu.get_user_id_from_name(user_dict, user) #get Library ID
-                    else:
-                        if uu.get_user_id_from_library_id(book):
-                            user = uu.get_user_id_from_library_id(book)
-                        else:
-                            raise Exception("Input Library ID was not found")
+                    book = book_id_from_title(book_dict, author_dict, book)
+
                     if book_dict[book].get_availability():
                         cursor.execute(query,(user, book, borrow_date, return_date))
                         conn.commit()
                         book_dict[book].set_borrowed()
-                        print(f'"{book_dict[book].get_title()}" has been successfully borrowed by user {user_dict[user].get_name()} please retun by or on {return_date}') #notify operator of success of borrowing title
+                        print(f'"{book_dict[book].get_title()}" has been successfully borrowed by user {user_dict[user].get_name()} please return by or on {return_date}') #notify operator of success of borrowing title
                         break
                     else: #status borrowed
                         print(f'"{book_dict[book].get_title()}" is already borrowed out') #notify operator that that book is unavailable
@@ -208,7 +204,7 @@ def borrow_book(user_dict, book_dict):
                 cursor.close()
                 conn.close()
 
-def return_book(user_dict, book_dict):
+def return_book(user_dict, book_dict, author_dict):
     #establish connection
     conn = connect_database()
 
@@ -219,13 +215,13 @@ def return_book(user_dict, book_dict):
             cursor = conn.cursor()
 
             #SQL Query to add the book to the Books table
-            query = "DELETE FROM borrowed_books WHERE user_id = %s AND book_id =  %s"
+            query = "DELETE FROM borrowed_books WHERE user_id = %s AND book_id = %s"
             
             while True:
                 try:
                     #get necessary information from operator
-                    user = input("Please enter the Name or Library ID of the user checking out the book: ")
-                    book = input("Please enter the title of the book you'd like to borrow: ")
+                    user = input("Please enter the Name or Library ID of the user who checked out the book: ")
+                    book = input("Please enter the Title of the book you'd like to return: ")
                     
                     #ensure all inputs are converted to ids for db handling
                     if not user.isnumeric(): #check if input is not the Library ID
@@ -235,6 +231,7 @@ def return_book(user_dict, book_dict):
                             user = uu.get_user_id_from_library_id(book)
                         else:
                             raise Exception("Input Library ID was not found")
+                    book = book_id_from_title(book_dict, author_dict, book)
                     if book_dict[book].get_availability():
                         cursor.execute(query,(user, book))
                         conn.commit()
@@ -263,21 +260,21 @@ def return_book(user_dict, book_dict):
                 cursor.close()
                 conn.close()
 
-def display_book(book_dict, book_id):
+def display_book(book_dict, author_dict, book_id):
     try:
         if book_id in book_dict.keys():
             print(f"\n Title: {book_dict[book_id].get_title()}")
-            print(f"Author {book_dict[book_id].get_author()}")
-            print(f"Genre: {book_dict[book_id].get_name()}")
+            print(f"Author {author_dict[book_dict[book_id].get_author()].get_name()}")
+            print(f"Genre: {book_dict[book_id].get_genre()}")
             print(f"ISBN: {book_dict[book_id].get_isbn()}")
             print(f"Publication Date: {book_dict[book_id].get_publication_date().strftime("%B %d, %Y")}")
-            available = book_dict[book_id].get_status()
+            available = book_dict[book_id].get_availability()
             available = 'Available' if available else 'Borrowed out'
             print(f"Availability: {available}\n")
         else:
             raise KeyError("The book chosen to be displayed does not exist")
     except KeyError as ke:
-        print(f"\033[7m{ke}[0m")
+        print(f"\033[7m{ke}\033[0m")
 
 def search_books(book_dict, author_dict):
     while True:
@@ -287,19 +284,19 @@ def search_books(book_dict, author_dict):
         #search by title
         if choice == '1': 
             book_title = input("Please input the title you are searching for: ").strip() #get title to search from operator
-            book_id = book_id_from_title(book_dict, book_title) #convert title to isbn
-            display_book(book_dict, book_id) #display the title chosen by the operator
+            book_id = book_id_from_title(book_dict, author_dict, book_title) #convert title to isbn
+            display_book(book_dict, author_dict, book_id) #display the title chosen by the operator
             break #end loop
                
         #search by author
         elif choice == '2': 
             author = input("What is the name of the Author you'd like to search for books from?").strip() #get author to search from operator
-            found_list = get_books_by_author(book_dict, get_author(author_dict, book_dict, author)) #initialize list of found books
+            found_list = get_books_by_author(get_author(author_dict, book_dict, author)) #initialize list of found books
 
             if found_list:
                 #one result
                 if len(found_list) == 1:
-                    display_book(book_dict, found_list[0])
+                    display_book(book_dict, author_dict, found_list[0])
 
                 #multiple results
                 elif len(found_list) > 1: #titles found and more than one
@@ -311,7 +308,7 @@ def search_books(book_dict, author_dict):
                     while True:
                         book_choice = int(input("Please enter the number of the title you wish to view: ").strip()) #ask to choose a title
                         if book_choice > 0 and book_choice <= len(found_list):
-                            display_book(book_dict, book_choice, found_list[choice - 1])
+                            display_book(book_dict, author_dict, found_list[choice - 1])
                             break
                         else: #invalid choice
                             print("That was not a valid choice. Please try again")
@@ -324,14 +321,14 @@ def search_books(book_dict, author_dict):
         #search isbn
         elif choice == '3':
             isbn_search = input("Please input the ISBN of the title you're searching for: ").strip() #get ISBN from operator
-            display_book(book_dict, book_id_from_isbn(isbn_search))
+            display_book(book_dict, author_dict, book_id_from_isbn(isbn_search))
         
         elif choice == '4': #seach by Genre
             genre_search = input("Please enter the genre you'd like to search for: ").strip()
             found = gu.get_books_from_genre(genre_search)
             if found:
                 if len(found) == 1: #check that titles found and there is only one
-                    display_book(found[0]) #display book in list
+                    display_book(book_dict, author_dict, found[0]) #display book in list
                 elif len(found) > 1:
                     print(f"Titles available in genre {genre_search}:") #heading for found titles
                     #print titles
@@ -341,7 +338,7 @@ def search_books(book_dict, author_dict):
                     while True:
                         book_choice = int(input("Please enter the number of the title you wish to view: ").strip())
                         if book_choice < 0 and book_choice >= len(found):
-                            display_book(book_dict, found[book_choice - 1])
+                            display_book(book_dict, author_dict, found[book_choice - 1])
                         else:
                             print("Invalid choice, please input a valid option")
 
@@ -361,14 +358,14 @@ def display_all_books(book_dict):
         for book in book_dict.values(): #iterate through book dictionary
             print(f"Title: {book.get_title()}")
             print(f"Author {book.get_author()}")
-            print(f"Genre: {book.get_name()}")
+            print(f"Genre: {book.get_genre()}")
             print(f"ISBN: {book.get_isbn()}:")
             print(f"Publication Date: {book.get_publication_date().strftime("%Y-%m-%d")}")
-            print(f"Status: {book.get_status()}\n")
+            print(f"Status: {book.get_availability()}\n")
     else:
         print("There are no books currently in the library\n")
 
-def get_books_by_author(book_dict, author_id):
+def get_books_by_author(author_id):
     #establish connection
     conn = connect_database()
 
@@ -379,7 +376,7 @@ def get_books_by_author(book_dict, author_id):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Books title WHERE author_id = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM books WHERE author_id = %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (author_id,))
@@ -388,8 +385,8 @@ def get_books_by_author(book_dict, author_id):
             results = cursor.fetchall()
 
             #check that results come back and how many results come back
+            return_value = []
             if results:
-                return_value = []
                 for value in results:
                     return_value.append(value[0])           
             else:
@@ -411,7 +408,7 @@ def get_books_by_author(book_dict, author_id):
                 conn.close()
             return return_value
         
-def book_id_from_isbn(book_dict, author_dict, isbn): #function to return the isbn of a book by its title
+def book_id_from_isbn(isbn): #function to return the isbn of a book by its title
     #establish connection
     conn = connect_database()
 
@@ -422,7 +419,7 @@ def book_id_from_isbn(book_dict, author_dict, isbn): #function to return the isb
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Books id WHERE isbn = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM books WHERE isbn = %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (isbn,))
@@ -434,6 +431,7 @@ def book_id_from_isbn(book_dict, author_dict, isbn): #function to return the isb
             if results:
                     return_value = results[0]
             else:
+                return_value = None
                 raise Error("That title was not found")
         #exceptions
         except Error as e:
@@ -474,8 +472,7 @@ def load_books_from_db(book_dict):
             if results:
                 for result in results:
                     id, title, author_id, genre_id, isbn, publication_date, availability = result
-
-                    book_dict[id] = Book(title, author_id, genre_id, isbn, publication_date, availability)
+                    book_dict[id] = Book(title, author_id, genre_id, isbn, publication_date, bool(availability))
             else:
                 raise Error("There are currently no Authors in the database")
 

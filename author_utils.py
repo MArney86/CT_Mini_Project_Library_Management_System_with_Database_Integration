@@ -1,7 +1,6 @@
 from author import Author
 from mysql.connector import Error
 from connect_mysql import connect_database
-import book_utils as bu
 
 def add_author(author_dict):
     #get author details from operator
@@ -18,7 +17,7 @@ def add_author(author_dict):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "INSERT INTO Authors (name, bio) VALUES (%s, %s)" #inserts new member in the Members table using the information passed to the function
+            query = "INSERT INTO authors (name, biography) VALUES (%s, %s)" #inserts new member in the Members table using the information passed to the function
 
             #Execute query and add author to author dictionary
             cursor.execute(query, (name, bio))
@@ -35,14 +34,10 @@ def add_author(author_dict):
             else:
                 print(f"Error: {e}") #general error
 
-    #add author to author dictionary
-    author_temp = Author(name, bio)
-    author_dict[author_temp.get_author_id()] =  author_temp
-
-def view_author_details(author_dict):
+def view_author_details(author_dict, book_dict):
     while True:
         name = input("Please enter that name of the author you'd like to view: ").strip() #get name of author from operator
-        author_id = get_author(name)
+        author_id = get_author(author_dict, book_dict, name)
         if author_id in author_dict.keys(): #check name is in keys of dictionary
             display_author(author_dict, author_id) #display the author's information
             break #end loop
@@ -65,7 +60,7 @@ def display_all_authors(author_dict):
     else:
         print("There are currently no authors in the library records")
 
-def get_author(author_dict, book_dict,  name):
+def get_author(author_dict, book_dict, name):
     #establish connection
     conn = connect_database()
 
@@ -76,7 +71,7 @@ def get_author(author_dict, book_dict,  name):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Authors id WHERE name = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM authors WHERE name LIKE %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (name,))
@@ -97,10 +92,7 @@ def get_author(author_dict, book_dict,  name):
                     
                     counter = 1
                     for result in results:
-                        if bu.get_books_by_author(book_dict, result[0])[0]:
-                            print(f"{counter}. {author_dict[result[0]].get_name()} author of {bu.get_books_by_author(book_dict, result[0])[0]}")
-                        else:
-                            print(f"{counter}. {author_dict[result[0]].get_name()}")
+                            print(f"{counter}. {author_dict[result[0]].get_name()}:  {author_dict[result[0]].get_biography()}")
                             counter += 1
                     while True: #loop in case of invalid inputs
                         choice = input('Please input the number of the specific Author you were looking for')
@@ -111,6 +103,7 @@ def get_author(author_dict, book_dict,  name):
                         else: #invalid choice
                             print("That was not a valid choice. Please try again")
             else:
+                return_value = None
                 raise Error("The Author was not found")
 
         #exceptions

@@ -10,18 +10,47 @@ def generate_library_id():
     return id #return new library id
 
 def add_user(user_dict):
-    name = input("Please enter the name of the user you'd like to add: ").strip() #get new user's name
-    id = generate_library_id() #generate new user's library id
+    #establish connection
+    conn = connect_database()
 
-    while True: #loop incase id already exists
-        if id in user_dict.keys(): #check if id already in use
-            id = generate_library_id
-            break
-        else: #id not already in use
-            break #end loop
+    #ensure connection and add author to the db first
+    if conn is not None:
+        try:
+            cursor = conn.cursor()
+            #get user details from operator
+            name = input("Please enter the name of the user you'd like to add: ").strip()
 
-    user_dict[id] = User(name, id) #initialize new user to user dictionary with library id as key
-    return id
+            id = generate_library_id() #generate new user's library id
+            library_id_set = set()
+            for user_id in user_dict.keys():
+                library_id_set.add(user_dict[user_id].get_library_id())
+            while True:
+                if id in library_id_set:
+                    id = generate_library_id()
+                else: #id not already in use
+                    break #end loop
+            
+            #query to insert new user into users table
+            query = '''INSERT INTO users (name, library_id)
+            VALUES (%s, %s)'''
+            cursor.execute(query, (name, id))
+            conn.commit()
+
+            temp_user = User(name, id)
+            user_dict[get_user_id_from_library_id(id)] = temp_user
+
+        #exceptions
+        except Error as e:
+            if e.errno == 1406:
+                print("Error: Value for name is too long.")
+            else:
+                print(f"Error: {e}") #general error
+
+        #close connections
+        finally:
+            if conn and conn.is_connected():
+                cursor.close()
+                conn.close()
 
 def view_user_details(user_dict, book_dict):
     if user_dict: #check that user dictionary isn't empty
@@ -79,34 +108,38 @@ def get_user_id_from_name(user_dict, name):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Users id WHERE name = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM users WHERE name LIKE %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (name,))
-            
+            print('execute')
             #store result for manipulation
             results = cursor.fetchall()
-
+            print('fetchall')
             #check that results come back and how many results come back and choose exact member
             if results:
+                print('results')
                 #one result
                 if len(results) == 1: #check that we found users and that there is only 1
                     return_value = results[0][0] #return value of __library_id from found user
+                    print('one')
+                
                 #multiple results and choosing specific user
                 elif len(results) > 1:
                     counter = 1
                     for user in results:
-                        print(f"{counter}: Name: {user_dict[user].get_name()}") #print user name
-                        print(f"   Library ID: {user_dict[user].get_library_id()}") #print the library id
+                        print(f"{counter}: Name: {user_dict[user[0]].get_name()}") #print user name
+                        print(f"   Library ID: {user_dict[user[0]].get_library_id()}") #print the library id
                         counter += 1
                     while True:
-                        choice = int(input("Please input the number of the user you were looking for: ").strip())
-                        if choice > 0 and choice <= len(results):
-                            return_value = results[choice - 1][0]
+                        choice = input("Please input the number of the user you were looking for: ").strip()
+                        if int(choice) > 0 and int(choice) <= len(results):
+                            return_value = results[int(choice) - 1][0]
                         else:
                             print("Invalid choice. Please Try again")
             #no resulsts
             else:
+                return_value = None
                 print("That name does not have a Library ID") #notify operator that user is not found
 
         #exceptions
@@ -116,7 +149,7 @@ def get_user_id_from_name(user_dict, name):
             else:
                 print(f"Error: {e}") #general error
         except KeyError:
-            print("Invalid choice. Please try again with only numbers")
+            print("Invalid choice get_user_id_from_name. Please try again with only numbers")
 
         #close connections
         finally:
@@ -136,7 +169,7 @@ def get_user_id_from_library_id(library_id):
             cursor = conn.cursor()
 
             #SQL Query
-            query = "SELECT FROM Users id WHERE library_id = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM users WHERE library_id = %s" #inserts new member in the Members table using the information passed to the function
 
             #Execute query
             cursor.execute(query, (library_id,))

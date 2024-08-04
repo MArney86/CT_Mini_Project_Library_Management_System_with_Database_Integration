@@ -3,10 +3,10 @@ from mysql.connector import Error
 
 class Genre:
     def __init__(self, name, description, category):
-        self._genre_id = self._get_genre_id_from_db()
         self._name = name
         self._description = description
         self._category = category
+        self._genre_id = self._get_genre_id_from_db()
 
     def get_genre_id(self):
         return self._genre_id
@@ -143,7 +143,7 @@ class Genre:
                 cursor = conn.cursor()
 
                 #SQL Query
-                query = "SELECT FROM genres id WHERE name = %s AND description = %s" #inserts new member in the Members table using the information passed to the function
+                query = "SELECT id FROM genres WHERE name = %s AND description = %s" #inserts new member in the Members table using the information passed to the function
 
                 #Execute query
                 cursor.execute(query, (self._name,self._description))
