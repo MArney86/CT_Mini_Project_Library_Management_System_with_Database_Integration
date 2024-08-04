@@ -48,8 +48,8 @@ def view_genre_details(genres_dict):
             break
         #genre not found and ask to add
         else:
-            print("That genre is not in the library's list of genres.") #notify user that genre is not in library
-            choice = input("Would you like to add the genre? (yes/no): ").strip() #offer to add
+            print("That genre is not in the library's list of genres.")
+            choice = input("Would you like to add the genre? (yes/no): ").strip()
             if choice == 'yes':
                 add_genre(genres_dict)
 
@@ -57,9 +57,9 @@ def display_genre(genres_dict, name):
     #verify that genre with name input exists
     if get_genre_id(name):
         #display genre information
-        print(f"\nName: {genres_dict[get_genre_id(name)].get_name()}") #print genre name to operator
-        print(f"Description: {genres_dict[get_genre_id(name)].get_description()}") #print description to operator 
-        print(f"Category: {genres_dict[get_genre_id(name)].get_category()}") #print category to operator
+        print(f"\nName: {genres_dict[get_genre_id(name)].get_name()}")
+        print(f"Description: {genres_dict[get_genre_id(name)].get_description()}") 
+        print(f"Category: {genres_dict[get_genre_id(name)].get_category()}") 
     
 
 def display_all_genres(genres_dict):

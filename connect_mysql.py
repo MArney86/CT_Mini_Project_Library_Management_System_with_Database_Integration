@@ -22,7 +22,7 @@ def connect_database():
     
     #Error during connection
     except Error as e:
-        print(f"Error: {e}")
+        print(f"\033[7mError: {e}\033[0m")
         return None
 
 def establish_db():
@@ -74,9 +74,9 @@ def establish_db():
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"\033[7mError: {e}\033[0m") #general error
         
         #close connections
         finally:
@@ -170,9 +170,9 @@ def setup_tables(table):
         #exceptions
         except Error as e:
             if e.errno == 1406:
-                print("Error: Value for name is too long.")
+                print("\033[7mError: Value for name is too long.\033[0m")
             else:
-                print(f"Error: {e}") #general error
+                print(f"]033[7mError: {e}\033[0m")
         
         #close connections
         finally:

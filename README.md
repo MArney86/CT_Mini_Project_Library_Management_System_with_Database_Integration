@@ -38,8 +38,8 @@ Table of Contents:
 ####	Installation: Clone or download the repository to a directory.
 
 ####	Running the Application on Windows:
-python .\Contact_Management_System.py (if Python is setup in your system's PATH)
-[installation Directory]\python.exe .\Contact_Management_System.py (no system PATH set)
+python .\Library_Management_System.py (if Python is setup in your system's PATH)
+[installation Directory]\python.exe .\Library_Management_System.py (no system PATH set)
 
 ####	Running the Application on POSIX Operating Systems(Linux/Unix/BSD/MacOS):
 python ./Contact_Management_System.py (if proper environment variables setup)

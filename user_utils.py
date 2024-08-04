@@ -141,8 +141,8 @@ def get_user_id_from_name(user_dict, name):
                     #iterate through results and print for choosing
                     counter = 1
                     for user in results:
-                        print(f"{counter}: Name: {user_dict[user[0]].get_name()}") #print user name
-                        print(f"   Library ID: {user_dict[user[0]].get_library_id()}") #print the library id
+                        print(f"{counter}: Name: {user_dict[user[0]].get_name()}")
+                        print(f"   Library ID: {user_dict[user[0]].get_library_id()}")
                         counter += 1
                     #choose distinct result to return
                     while True:

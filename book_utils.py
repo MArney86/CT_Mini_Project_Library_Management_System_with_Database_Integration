@@ -8,7 +8,7 @@ from mysql.connector import Error
 
 
 
-def book_id_from_title(book_dict, author_dict, title,): #function to return the isbn of a book by its title
+def book_id_from_title(book_dict, author_dict, title,):
     #establish connection
     conn = connect_database()
 
@@ -19,7 +19,7 @@ def book_id_from_title(book_dict, author_dict, title,): #function to return the 
             cursor = conn.cursor()
 
             #SQL Query to select the id of the book matching the input title
-            query = "SELECT id FROM books WHERE title = %s" #inserts new member in the Members table using the information passed to the function
+            query = "SELECT id FROM books WHERE title = %s"
 
             #Execute query and store results
             cursor.execute(query, (title,))
@@ -251,7 +251,7 @@ def return_book(user_dict, book_dict, author_dict):
                         conn.commit()
                         #change book in dictionary
                         book_dict[book].set_available()
-                        print(f'"{book_dict[book].get_title()}" has been successfully returned by user {user_dict[user].get_name()}') #notify operator of success of borrowing title
+                        print(f'"{book_dict[book].get_title()}" has been successfully returned by user {user_dict[user].get_name()}') 
                         break
                     else: #status available
                         print(f'"{book_dict[book].get_title()}" is not borrowed out')
@@ -302,9 +302,9 @@ def search_books(book_dict, author_dict):
 
         #search by title
         if choice == '1': 
-            book_title = input("Please input the title you are searching for: ").strip() #get title to search from operator
-            book_id = book_id_from_title(book_dict, author_dict, book_title) #convert title to isbn
-            display_book(book_dict, author_dict, book_id) #display the title chosen by the operator
+            book_title = input("Please input the title you are searching for: ").strip()
+            book_id = book_id_from_title(book_dict, author_dict, book_title)
+            display_book(book_dict, author_dict, book_id)
             break #end loop
                
         #search by author

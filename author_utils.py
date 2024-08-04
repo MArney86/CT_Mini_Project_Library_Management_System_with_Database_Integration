@@ -17,7 +17,7 @@ def add_author(author_dict):
             cursor = conn.cursor()
 
             #SQL Query to insert new author
-            query = "INSERT INTO authors (name, biography) VALUES (%s, %s)" #inserts new member in the Members table using the information passed to the function
+            query = "INSERT INTO authors (name, biography) VALUES (%s, %s)" 
 
             #Execute query and add author to author dictionary
             cursor.execute(query, (name, bio))
