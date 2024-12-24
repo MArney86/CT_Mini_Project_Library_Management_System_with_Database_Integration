@@ -5,7 +5,7 @@ def connect_database():
     #login details
     db_name = 'library_management_system_db'
     user = 'root'
-    password = 'your password here'
+    password = '6yhn*UHB6tfc'
     host = 'localhost'
 
     #attempt the connection with error handling
